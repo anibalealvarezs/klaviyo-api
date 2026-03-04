@@ -21,7 +21,7 @@ class KlaviyoApi extends ApiKeyClient
     public function __construct(
         string $apiKey,
     ) {
-        return parent::__construct(
+        parent::__construct(
             baseUrl: 'https://a.klaviyo.com/api/',
             apiKey: $apiKey,
             authSettings: [
@@ -30,6 +30,9 @@ class KlaviyoApi extends ApiKeyClient
                 'headerPrefix' => 'Klaviyo-API-Key ',
             ],
         );
+
+        $this->setResponseErrorDetector('errors');
+        $this->setErrorMessageParser(fn($data) => $data['errors'][0]['detail'] ?? json_encode($data));
     }
 
     /**
@@ -51,7 +54,7 @@ class KlaviyoApi extends ApiKeyClient
      * @param array $customErrors
      * @param bool $ignoreAuth
      * @param string|null $revision
-     * @return Response
+     * @return mixed
      * @throws GuzzleException
      */
     public function performRequest(
@@ -67,22 +70,19 @@ class KlaviyoApi extends ApiKeyClient
         bool $verify = false,
         bool $allowNewToken = false,
         string $pathToSave = "",
-        bool $stream = null,
-        ?array $errorMessageNesting = null,
+        ?bool $stream = null,
+        mixed $errorMessageNesting = null,
         int $sleep = 0,
         array $customErrors = [],
         bool $ignoreAuth = false,
+        mixed $onFailure = null,
         ?string $revision = null,
-    ): Response {
+    ): mixed {
         if ($revision) {
             $additionalHeaders["revision"] = $revision;
             // $additionalHeaders["Authorization"] = "Klaviyo-API-Key " . $this->apiKey;
         } else {
             $query["api_key"] = $this->apiKey;
-        }
-
-        if (!$errorMessageNesting) {
-            $errorMessageNesting = ['errors' => [['detail']]];
         }
 
         return parent::performRequest(
@@ -101,6 +101,9 @@ class KlaviyoApi extends ApiKeyClient
             stream: $stream,
             errorMessageNesting: $errorMessageNesting,
             sleep: $sleep,
+            customErrors: $customErrors,
+            ignoreAuth: $ignoreAuth,
+            onFailure: $onFailure,
         );
     }
 

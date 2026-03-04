@@ -18,6 +18,20 @@
     },
     "repositories": [
         {
+            "type": "path",
+            "url": "../OAuth-v1",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../api-client-skeleton",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
             "type": "composer", "url": "https://satis.anibalalvarez.com/"
         }
     ],
