@@ -32,7 +32,7 @@ class KlaviyoApi extends ApiKeyClient
         );
 
         $this->setResponseErrorDetector('errors');
-        $this->setErrorMessageParser(fn($data) => $data['errors'][0]['detail'] ?? json_encode($data));
+        $this->setErrorMessageParser(fn ($data) => $data['errors'][0]['detail'] ?? json_encode($data));
     }
 
     /**
@@ -119,7 +119,7 @@ class KlaviyoApi extends ApiKeyClient
         ?array $metricFields = null,
         ?array $filter = null, // Format [["operator" => ["equals",...], "field" => "name", "value" => "String"], ...]
     ): array {
-        $query =[];
+        $query = [];
 
         if ($metricFields) {
             $query["fields[metric]"] = implode(",", $metricFields);
@@ -152,7 +152,7 @@ class KlaviyoApi extends ApiKeyClient
         string $metricId,
         ?array $filter = null, // Format [["operator" => ["equals",...], "field" => "name", "value" => "String"], ...]
     ): array {
-        $query =[];
+        $query = [];
 
         if ($filter) {
             $query["filter"] = implode(',', $this->getTranslatedFilters($filter));
@@ -219,7 +219,7 @@ class KlaviyoApi extends ApiKeyClient
             $attributes["page_size"] = $count;
         }
         if ($groupBy) {
-            $attributes["by"] =$groupBy;
+            $attributes["by"] = $groupBy;
         }
         if ($measurements) {
             $aMeasurements = [];
@@ -314,7 +314,7 @@ class KlaviyoApi extends ApiKeyClient
         ?Sort $sort = Sort::ascending,
         ?string $sortField = null,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($flowActionFields) {
             $query["fields[flow-action]"] = implode(",", $flowActionFields);
@@ -364,7 +364,7 @@ class KlaviyoApi extends ApiKeyClient
         ?array $flowFields = null,
         ?bool $includeActions = true,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($flowActionFields) {
             $query["fields[flow-action]"] = implode(",", $flowActionFields);
@@ -403,7 +403,7 @@ class KlaviyoApi extends ApiKeyClient
         ?Sort $sort = Sort::ascending,
         ?string $sortField = null,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($fields) {
             $query["fields[flow-message]"] = implode(",", $fields);
@@ -556,7 +556,7 @@ class KlaviyoApi extends ApiKeyClient
         bool $sentOnly = false,
         ?string $timezone = null,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($from) {
             $parsedFrom = Carbon::parse($from);
@@ -666,7 +666,7 @@ class KlaviyoApi extends ApiKeyClient
         ?array $campaignFields = null,
         ?bool $includeTags = true,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($tagFields) {
             $query["fields[tag]"] = implode(",", $tagFields);
@@ -699,7 +699,7 @@ class KlaviyoApi extends ApiKeyClient
         string $messageId,
         ?array $fields = null,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($fields) {
             $query["fields[campaign-message]"] = implode(",", $fields);
@@ -726,7 +726,7 @@ class KlaviyoApi extends ApiKeyClient
         string $campaignId,
         ?array $fields = null,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($fields) {
             $query["fields[tag]"] = implode(",", $fields);
@@ -755,7 +755,7 @@ class KlaviyoApi extends ApiKeyClient
         ?array $fields = null,
         Relationships $relationships = Relationships::tags,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($fields) {
             $query["fields[tag]"] = implode(",", $fields);
@@ -796,7 +796,7 @@ class KlaviyoApi extends ApiKeyClient
         ?string $sortField = null,
         ?string $cursor = null,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($eventFields) {
             $query["fields[event]"] = implode(",", $eventFields);
@@ -956,7 +956,7 @@ class KlaviyoApi extends ApiKeyClient
         ?string $cursor = null,
         int $limit = 100,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($profileFields) {
             $query["fields[profile]"] = implode(",", $profileFields);
@@ -1046,7 +1046,7 @@ class KlaviyoApi extends ApiKeyClient
         ?string $cursor = null,
         int $limit = 100,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($catalogItemsFields) {
             $query["fields[catalog-item]"] = implode(",", $catalogItemsFields);
@@ -1142,7 +1142,7 @@ class KlaviyoApi extends ApiKeyClient
         ?string $cursor = null,
         int $limit = 100,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($catalogVariantsFields) {
             $query["fields[catalog-variant]"] = implode(",", $catalogVariantsFields);
@@ -1222,7 +1222,7 @@ class KlaviyoApi extends ApiKeyClient
         ?string $cursor = null,
         int $limit = 100,
     ): array {
-        $query =[];
+        $query = [];
 
         if ($catalogCategoriesFields) {
             $query["fields[catalog-category]"] = implode(",", $catalogCategoriesFields);

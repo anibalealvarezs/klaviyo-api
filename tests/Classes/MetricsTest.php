@@ -75,7 +75,7 @@ class MetricsTest extends TestCase
     /**
      * @throws GuzzleException
      */
-        public function testGetMetricIdByName(): void
+    public function testGetMetricIdByName(): void
     {
         $metricId = Metrics::getMetricIdByName(
             name: EnumsMetrics::placed_order->value,

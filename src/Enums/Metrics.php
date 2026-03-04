@@ -15,7 +15,7 @@ enum Metrics: string
     case unsubscribed_from_list = 'Unsubscribed from List';
     case marked_email_as_spam = 'Marked Email as Spam';
     case received_email = 'Received Email';
-   
+
     public static function fromValue(string $name): self
     {
         return match ($name) {

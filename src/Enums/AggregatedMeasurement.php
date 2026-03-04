@@ -7,7 +7,7 @@ enum AggregatedMeasurement: string
     case count = 'count';
     case unique = 'unique';
     case sum_value = 'sum_value';
-   
+
     public static function fromName(string $name)
     {
         return constant("self::$name") ?? null;

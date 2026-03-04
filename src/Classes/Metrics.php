@@ -105,7 +105,7 @@ class Metrics
         $periodicalData = [];
         $from = Carbon::parse($from);
         $to = Carbon::parse($to);
-        while($from->lessThan($to)) {
+        while ($from->lessThan($to)) {
             $tempTo = $from->copy()->addYear()->subSecond();
             if ($tempTo->greaterThanOrEqualTo($to)) {
                 $tempTo = $to->copy();
@@ -138,11 +138,11 @@ class Metrics
 
             $periodicalData['data']['attributes']['dates'] = [...$periodicalData['data']['attributes']['dates'], ...$currentYearPeriodicalData['data']['attributes']['dates']];
             $totalDates = count($periodicalData['data']['attributes']['dates']);
-            foreach($currentYearPeriodicalData['data']['attributes']['data'] as $index => $currentRow) {
+            foreach ($currentYearPeriodicalData['data']['attributes']['data'] as $index => $currentRow) {
                 $found = false;
-                foreach($periodicalData['data']['attributes']['data'] as $dataKey => $row) {
+                foreach ($periodicalData['data']['attributes']['data'] as $dataKey => $row) {
                     if ($row['dimensions'] == $currentRow['dimensions']) {
-                        foreach($row['measurements'] as $key => $value) {
+                        foreach ($row['measurements'] as $key => $value) {
                             $periodicalData['data']['attributes']['data'][$dataKey]['measurements'][$key] = [
                                 ...$periodicalData['data']['attributes']['data'][$dataKey]['measurements'][$key],
                                 ...$currentRow['measurements'][$key]
@@ -154,15 +154,15 @@ class Metrics
                 }
                 if (!$found) {
                     $currentDates = count($currentYearPeriodicalData['data']['attributes']['dates']);
-                    foreach($currentRow['measurements'] as $key => $value) {
+                    foreach ($currentRow['measurements'] as $key => $value) {
                         $zeros = array_fill(0, $totalDates - $currentDates, 0);
                         $currentRow['measurements'][$key] = [...$zeros, ...$currentRow['measurements'][$key]];
                     }
                     $periodicalData['data']['attributes']['data'][] = $currentRow;
                 }
             }
-            foreach($periodicalData['data']['attributes']['data'] as $dataKey => $row) {
-                foreach($row['measurements'] as $key => $value) {
+            foreach ($periodicalData['data']['attributes']['data'] as $dataKey => $row) {
+                foreach ($row['measurements'] as $key => $value) {
                     $currentDates = count($value);
                     if ($currentDates < $totalDates) {
                         $zeros = array_fill(0, $totalDates - $currentDates, 0);
@@ -876,7 +876,7 @@ class Metrics
                     if (!isset($firstElement['measurements'][$measurementKey])) {
                         $firstElement['measurements'][$measurementKey] = [];
                     }
-                    foreach($measurementArray as $measurementIndex => $measurementValue) {
+                    foreach ($measurementArray as $measurementIndex => $measurementValue) {
                         if (!isset($firstElement['measurements'][$measurementKey][$measurementIndex])) {
                             $firstElement['measurements'][$measurementKey][$measurementIndex] = 0;
                         }

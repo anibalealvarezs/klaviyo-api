@@ -77,7 +77,8 @@ class KlaviyoApiTest extends TestCase
     /**
      * @throws GuzzleException
      */
-    public function testGetMetricAggregates() {
+    public function testGetMetricAggregates()
+    {
         $metricAggregates = $this->klaviyoApi->getMetricAggregates(
             metricId: $this->metricId,
             /* sort: $this->faker->randomElements([Sort::ascending, Sort::descending])[0],
