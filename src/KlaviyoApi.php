@@ -1399,6 +1399,7 @@ class KlaviyoApi extends ApiKeyClient
      */
     public function getAllProfilesAndProcess(
         ?array $profileFields = null,
+        ?array $additionalFields = null,
         ?array $filter = null,
         ?Sort $sort = Sort::ascending,
         ?string $sortField = null,
@@ -1408,6 +1409,7 @@ class KlaviyoApi extends ApiKeyClient
         do {
             $response = $this->getProfiles(
                 profileFields: $profileFields,
+                additionalFields: $additionalFields,
                 filter: $filter,
                 sort: $sort,
                 sortField: $sortField,
