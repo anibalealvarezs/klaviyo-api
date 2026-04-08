@@ -1317,4 +1317,136 @@ class KlaviyoApi extends ApiKeyClient
         }
         return $list;
     }
+
+    /**
+     * @param array|null $metricFields
+     * @param array|null $filter
+     * @param callable|null $callback
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllMetricsAndProcess(
+        ?array $metricFields = null,
+        ?array $filter = null,
+        ?callable $callback = null
+    ): void {
+        $cursor = null;
+        do {
+            $response = $this->getMetrics(cursor: $cursor, metricFields: $metricFields, filter: $filter);
+            if (!empty($response['data']) && $callback) {
+                $callback($response['data']);
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+    }
+
+    /**
+     * @param string $metricId
+     * @param array|null $return_fields
+     * @param Sort|null $sort
+     * @param string|null $sortField
+     * @param int $count
+     * @param array|null $groupBy
+     * @param array|null $measurements
+     * @param Interval $interval
+     * @param array|null $filter
+     * @param string|null $timezone
+     * @param callable|null $callback
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllMetricAggregatesAndProcess(
+        string $metricId,
+        ?array $return_fields = null,
+        ?Sort $sort = Sort::ascending,
+        ?string $sortField = null,
+        int $count = 10000,
+        ?array $groupBy = null,
+        ?array $measurements = null,
+        Interval $interval = Interval::day,
+        ?array $filter = null,
+        ?string $timezone = null,
+        ?callable $callback = null
+    ): void {
+        $cursor = null;
+        do {
+            $response = $this->getMetricAggregates(
+                metricId: $metricId,
+                return_fields: $return_fields,
+                sort: $sort,
+                sortField: $sortField,
+                cursor: $cursor,
+                count: $count,
+                groupBy: $groupBy,
+                measurements: $measurements,
+                interval: $interval,
+                filter: $filter,
+                timezone: $timezone
+            );
+            if (!empty($response['data']) && $callback) {
+                $callback($response['data']);
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+    }
+
+    /**
+     * @param array|null $profileFields
+     * @param array|null $filter
+     * @param Sort|null $sort
+     * @param string|null $sortField
+     * @param callable|null $callback
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllProfilesAndProcess(
+        ?array $profileFields = null,
+        ?array $filter = null,
+        ?Sort $sort = Sort::ascending,
+        ?string $sortField = null,
+        ?callable $callback = null
+    ): void {
+        $cursor = null;
+        do {
+            $response = $this->getProfiles(
+                profileFields: $profileFields,
+                filter: $filter,
+                sort: $sort,
+                sortField: $sortField,
+                cursor: $cursor
+            );
+            if (!empty($response['data']) && $callback) {
+                $callback($response['data']);
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+    }
+
+    /**
+     * @param array|null $catalogItemFields
+     * @param array|null $filter
+     * @param Sort|null $sort
+     * @param string|null $sortField
+     * @param callable|null $callback
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllCatalogItemsAndProcess(
+        ?array $catalogItemsFields = null,
+        ?array $filter = null,
+        ?Sort $sort = Sort::ascending,
+        ?string $sortField = null,
+        ?callable $callback = null
+    ): void {
+        $cursor = null;
+        do {
+            $response = $this->getCatalogItems(
+                catalogItemsFields: $catalogItemsFields,
+                filter: $filter,
+                sort: $sort,
+                sortField: $sortField,
+                cursor: $cursor
+            );
+            if (!empty($response['data']) && $callback) {
+                $callback($response['data']);
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+    }
 }
