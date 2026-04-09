@@ -89,10 +89,11 @@ class KlaviyoConvert
         $rows = [];
         foreach ($dates as $index => $date) {
             if (isset($data[$index])) {
-                $rows[] = [
+                $rows[] = array_merge($data[$index]['dimensions'] ?? [], [
                     'date' => $date,
-                    'aggregates' => $data[$index],
-                ];
+                    'count' => $data[$index]['measurements']['count'] ?? 0,
+                    'measurements' => $data[$index]['measurements'] ?? [],
+                ]);
             }
         }
 
@@ -103,8 +104,9 @@ class KlaviyoConvert
             'fallback_platform_id' => $metricId,
             'date_field' => 'date',
             'metrics' => [
-                'aggregates.measurements.count' => $metricName
+                'count' => $metricName
             ],
+            'dimensions' => array_keys($rows[0] ?? []),
             'context' => [
                 'platform_id' => $metricId,
             ],
