@@ -141,6 +141,25 @@ class KlaviyoApi extends ApiKeyClient
         // Return response
         return json_decode($response->getBody()->getContents(), true);
     }
+    /**
+     * @return array
+     */
+    public function getMetricsMap(): array
+    {
+        $response = $this->getMetrics();
+        $map = [];
+        if (isset($response['data'])) {
+            foreach ($response['data'] as $metric) {
+                $name = $metric['attributes']['name'] ?? '';
+                $id = $metric['id'] ?? '';
+                if ($name && $id) {
+                    $map[$id] = $name;
+                }
+            }
+        }
+        return $map;
+    }
+
 
     /**
      * @param string $metricId
