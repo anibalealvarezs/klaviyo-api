@@ -106,7 +106,7 @@ class KlaviyoConvert
             'metrics' => [
                 'count' => $metricName
             ],
-            'dimensions' => array_keys($rows[0] ?? []),
+            'dimensions' => array_filter(array_keys($rows[0] ?? []), fn($k) => !in_array($k, ['date', 'count', 'measurements'])),
             'context' => [
                 'platform_id' => $metricId,
             ],
