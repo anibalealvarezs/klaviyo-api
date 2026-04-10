@@ -4,7 +4,7 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Aníbal Álvarez",
+            "name": "An\u00edbal \u00c1lvarez",
             "email": "anibalealvarezs@gmail.com"
         }
     ],
@@ -14,8 +14,7 @@
         "ext-json": "*",
         "symfony/yaml": "^5.4.10",
         "nesbot/carbon": "^2.61",
-        "anibalealvarezs/api-client-skeleton": "dev-main",
-        "anibalealvarezs/api-driver-core": "dev-main"
+        "anibalealvarezs/api-client-skeleton": "dev-main"
     },
     "repositories": [
         {
@@ -33,7 +32,8 @@
             }
         },
         {
-            "type": "composer", "url": "https://satis.anibalalvarez.com/"
+            "type": "composer",
+            "url": "https://satis.anibalalvarez.com/"
         }
     ],
     "autoload": {
