@@ -16,10 +16,12 @@ class KlaviyoApi extends ApiKeyClient
 {
     /**
      * @param string $apiKey
+     * @param \GuzzleHttp\Client|null $guzzleClient
      * @throws RequestException|GuzzleException
      */
     public function __construct(
         string $apiKey,
+        ?\GuzzleHttp\Client $guzzleClient = null,
     ) {
         parent::__construct(
             baseUrl: 'https://a.klaviyo.com/api/',
@@ -29,6 +31,7 @@ class KlaviyoApi extends ApiKeyClient
                 'name' => 'Authorization',
                 'headerPrefix' => 'Klaviyo-API-Key ',
             ],
+            guzzleClient: $guzzleClient,
         );
 
         $this->setResponseErrorDetector('errors');
@@ -332,6 +335,7 @@ class KlaviyoApi extends ApiKeyClient
         ?bool $includeActions = true,
         ?Sort $sort = Sort::ascending,
         ?string $sortField = null,
+        ?string $cursor = null,
     ): array {
         $query = [];
 
@@ -343,6 +347,9 @@ class KlaviyoApi extends ApiKeyClient
         }
         if ($count) {
             $query["page_size"] = $count;
+        }
+        if ($cursor) {
+            $query["page[cursor]"] = $cursor;
         }
         if ($filter) {
             $list = [];
@@ -498,6 +505,55 @@ class KlaviyoApi extends ApiKeyClient
         } while (isset($response['links']['next']) && $response['links']['next'] && ($response['links']['next'] != "null") && ($cursor = self::getCursorFromUrl($response['links']['next'])));
 
         return ['data' => $campaigns];
+    }
+
+    /**
+     * @param array|null $tagFields
+     * @param array|null $campaignFields
+     * @param array|null $filter
+     * @param bool|null $includeTags
+     * @param Sort|null $sort
+     * @param string|null $sortField
+     * @param string|null $from
+     * @param string|null $to
+     * @param bool $sentOnly
+     * @param string|null $timezone
+     * @param callable|null $callback
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllCampaignsAndProcess(
+        ?array $tagFields = null,
+        ?array $campaignFields = null,
+        ?array $filter = null,
+        ?bool $includeTags = true,
+        ?Sort $sort = Sort::ascending,
+        ?string $sortField = null,
+        ?string $from = null,
+        ?string $to = null,
+        bool $sentOnly = false,
+        ?string $timezone = null,
+        ?callable $callback = null
+    ): void {
+        $cursor = null;
+        do {
+            $response = $this->getCampaignsStable(
+                tagFields: $tagFields,
+                campaignFields: $campaignFields,
+                filter: $filter,
+                includeTags: $includeTags,
+                sort: $sort,
+                sortField: $sortField,
+                cursor: $cursor,
+                from: $from,
+                to: $to,
+                sentOnly: $sentOnly,
+                timezone: $timezone,
+            );
+            if (!empty($response['data']) && $callback) {
+                $callback($response['data']);
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($response['links']['next'] != "null") && ($cursor = self::getCursorFromUrl($response['links']['next'])));
     }
 
     /**
@@ -1531,5 +1587,147 @@ class KlaviyoApi extends ApiKeyClient
                 $callback($response['data']);
             }
         } while (isset($response['links']['next']) && $response['links']['next'] && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+    }
+
+    /**
+     * @param array|null $eventFields
+     * @param array|null $metricFields
+     * @param array|null $profileFields
+     * @param array|null $filter
+     * @param bool|null $includeMetrics
+     * @param bool|null $includeProfiles
+     * @param Sort|null $sort
+     * @param string|null $sortField
+     * @param callable|null $callback
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllEventsAndProcess(
+        ?array $eventFields = null,
+        ?array $metricFields = null,
+        ?array $profileFields = null,
+        ?array $filter = null,
+        ?bool $includeMetrics = true,
+        ?bool $includeProfiles = true,
+        ?Sort $sort = Sort::ascending,
+        ?string $sortField = null,
+        ?callable $callback = null
+    ): void {
+        $cursor = null;
+        do {
+            $response = $this->getEvents(
+                eventFields: $eventFields,
+                metricFields: $metricFields,
+                profileFields: $profileFields,
+                filter: $filter,
+                includeMetrics: $includeMetrics,
+                includeProfiles: $includeProfiles,
+                sort: $sort,
+                sortField: $sortField,
+                cursor: $cursor,
+            );
+            if (!empty($response['data']) && $callback) {
+                $callback($response['data']);
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($response['links']['next'] != "null") && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+    }
+
+    /**
+     * @param array|null $flowActionFields
+     * @param array|null $flowFields
+     * @param array|null $filter
+     * @param bool|null $includeActions
+     * @param Sort|null $sort
+     * @param string|null $sortField
+     * @return array
+     * @throws GuzzleException
+     */
+    public function getAllFlows(
+        ?array $flowActionFields = null,
+        ?array $flowFields = null,
+        ?array $filter = null,
+        ?bool $includeActions = true,
+        ?Sort $sort = Sort::ascending,
+        ?string $sortField = null,
+    ): array {
+        $cursor = null;
+        $flows = [];
+        do {
+            $response = $this->getFlows(
+                flowActionFields: $flowActionFields,
+                flowFields: $flowFields,
+                filter: $filter,
+                includeActions: $includeActions,
+                sort: $sort,
+                sortField: $sortField,
+                cursor: $cursor,
+            );
+            if (!empty($response['data'])) {
+                $flows = [...$flows, ...$response['data']];
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($response['links']['next'] != "null") && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+
+        return ['data' => $flows];
+    }
+
+    /**
+     * @param array|null $flowActionFields
+     * @param array|null $flowFields
+     * @param array|null $filter
+     * @param bool|null $includeActions
+     * @param Sort|null $sort
+     * @param string|null $sortField
+     * @param callable|null $callback
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllFlowsAndProcess(
+        ?array $flowActionFields = null,
+        ?array $flowFields = null,
+        ?array $filter = null,
+        ?bool $includeActions = true,
+        ?Sort $sort = Sort::ascending,
+        ?string $sortField = null,
+        ?callable $callback = null
+    ): void {
+        $cursor = null;
+        do {
+            $response = $this->getFlows(
+                flowActionFields: $flowActionFields,
+                flowFields: $flowFields,
+                filter: $filter,
+                includeActions: $includeActions,
+                sort: $sort,
+                sortField: $sortField,
+                cursor: $cursor,
+            );
+            if (!empty($response['data']) && $callback) {
+                $callback($response['data']);
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($response['links']['next'] != "null") && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+    }
+
+    /**
+     * @param callable $fetcher
+     * @param callable|null $callback
+     * @return array
+     */
+    protected function fetchKlaviyoAllAndProcess(callable $fetcher, ?callable $callback = null): array
+    {
+        $cursor = null;
+        $totalData = [];
+        do {
+            $response = $fetcher($cursor);
+            if (!empty($response['data'])) {
+                if ($callback) {
+                    $callback($response['data']);
+                } else {
+                    $totalData = [...$totalData, ...$response['data']];
+                }
+            }
+            $nextLink = $response['links']['next'] ?? null;
+        } while ($nextLink && $nextLink !== "null" && ($cursor = self::getCursorFromUrl($nextLink)));
+
+        return $totalData ? ['data' => $totalData] : [];
     }
 }

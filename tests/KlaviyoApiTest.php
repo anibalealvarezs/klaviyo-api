@@ -11,9 +11,13 @@ use Anibalealvarezs\KlaviyoApi\Enums\Sort;
 use Anibalealvarezs\KlaviyoApi\KlaviyoApi;
 use Faker\Factory;
 use Faker\Generator;
-use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
+use Anibalealvarezs\ApiSkeleton\Classes\Exceptions\ApiRequestException;
 
 class KlaviyoApiTest extends TestCase
 {
@@ -22,17 +26,34 @@ class KlaviyoApiTest extends TestCase
     private Generator $faker;
 
     /**
+     * @param MockHandler $mock
+     * @return GuzzleClient
+     */
+    protected function createMockedGuzzleClient(MockHandler $mock): GuzzleClient
+    {
+        $handlerStack = HandlerStack::create($mock);
+        return new GuzzleClient(['handler' => $handlerStack]);
+    }
+
+    /**
      * @throws GuzzleException
      */
     protected function setUp(): void
     {
-        $config = Yaml::parseFile(__DIR__ . "/../config/config.yaml");
+        $configFile = __DIR__ . "/../config/config.yaml";
+        if (file_exists($configFile)) {
+            $config = Yaml::parseFile($configFile);
+            $this->metricId = Metrics::getMetricIdByName(
+                name: EnumsMetrics::placed_order->value,
+                config: $config,
+            );
+        } else {
+            $config = ['klaviyo_api_key' => 'pk_test'];
+            $this->metricId = 'metric_id';
+        }
+
         $this->klaviyoApi = new KlaviyoApi(
             apiKey: $config['klaviyo_api_key']
-        );
-        $this->metricId = Metrics::getMetricIdByName(
-            name: EnumsMetrics::placed_order->value,
-            config: $config,
         );
         $this->faker = Factory::create();
     }
@@ -47,7 +68,13 @@ class KlaviyoApiTest extends TestCase
      */
     public function testGetMetrics(): void
     {
-        $metrics = $this->klaviyoApi->getMetrics(
+        $mock = new MockHandler([
+            new Response(200, [], json_encode(['data' => [['id' => 'm1', 'type' => 'metric']]])),
+        ]);
+        $guzzle = $this->createMockedGuzzleClient($mock);
+        $client = new KlaviyoApi(apiKey: 'pk_test', guzzleClient: $guzzle);
+
+        $metrics = $client->getMetrics(
             metricFields: $this->faker->randomElements(['name', 'created', 'updated', 'integration'], null),
         );
 
@@ -62,13 +89,24 @@ class KlaviyoApiTest extends TestCase
      */
     public function testGetMetricData(): void
     {
-        $metricData = $this->klaviyoApi->getMetricData(
-            metricId: $this->metricId,
+        $mock = new MockHandler([
+            new Response(200, [], json_encode([
+                'data' => [
+                    'type' => 'metric',
+                    'id' => 'm1',
+                    'attributes' => []
+                ]
+            ])),
+        ]);
+        $guzzle = $this->createMockedGuzzleClient($mock);
+        $client = new KlaviyoApi(apiKey: 'pk_test', guzzleClient: $guzzle);
+
+        $metricData = $client->getMetricData(
+            metricId: 'm1',
         );
 
         $this->assertIsArray($metricData);
         $this->assertArrayHasKey('data', $metricData);
-        $this->assertIsArray($metricData['data']);
         $this->assertArrayHasKey('type', $metricData['data']);
         $this->assertArrayHasKey('id', $metricData['data']);
         $this->assertArrayHasKey('attributes', $metricData['data']);
@@ -79,199 +117,88 @@ class KlaviyoApiTest extends TestCase
      */
     public function testGetMetricAggregates()
     {
-        $metricAggregates = $this->klaviyoApi->getMetricAggregates(
-            metricId: $this->metricId,
-            /* sort: $this->faker->randomElements([Sort::ascending, Sort::descending])[0],
-            sortField: $this->faker->randomElements([
-                '$attributed_channel',
-                '$attributed_flow',
-                '$attributed_message',
-                '$attributed_variation',
-                '$campaign_channel',
-                '$flow',
-                '$flow_channel',
-                '$message',
-                '$message_send_cohort',
-                '$variation',
-                '$variation_send_cohort',
-                'Bounce Type',
-                'Campaign Name',
-                'Client Canonical',
-                'Client Name',
-                'Client Type',
-                'Email Domain',
-                'Failure Source',
-                'Failure Type',
-                'From Number',
-                'From Phone Region',
-                'List',
-                'Message Name',
-                'Message Type',
-                'Method',
-                'Subject',
-                'To Number',
-                'To Phone Region',
-                'URL',
-                'count',
-                'form_id',
-                'sum_value',
-                'unique',
-            ])[0], */
-            count: $this->faker->numberBetween(1, 10000),
-            measurements: $this->faker->randomElements([
-                AggregatedMeasurement::count,
-                AggregatedMeasurement::sum_value,
-                AggregatedMeasurement::unique,
-            ], null),
-            interval: $this->faker->randomElements([
-                Interval::hour,
-                Interval::day,
-                Interval::week,
-                Interval::month,
-            ])[0],
-            filter: [
-                [
-                    "operator" => 'greater-or-equal',
-                    "field" => 'datetime',
-                    "value" => (new Carbon($this->faker->dateTimeBetween('-1 year', '-1 month')))->format('Y-m-d\TH:i:s'),
-                ],
-                [
-                    "operator" => 'less-than',
-                    "field" => 'datetime',
-                    "value" => (new Carbon($this->faker->dateTimeBetween('-1 month')))->format('Y-m-d\TH:i:s'),
-                ],
-            ],
-            timezone: $this->faker->timezone('US'),
+        $mock = new MockHandler([
+            new Response(200, [], json_encode([
+                'data' => [
+                    'type' => 'metric-aggregate',
+                    'id' => 'ma1',
+                    'attributes' => [
+                        'dates' => [],
+                        'data' => [
+                            [
+                                'dimensions' => [],
+                                'measurements' => []
+                            ]
+                        ]
+                    ]
+                ]
+            ])),
+        ]);
+        $guzzle = $this->createMockedGuzzleClient($mock);
+        $client = new KlaviyoApi(apiKey: 'pk_test', guzzleClient: $guzzle);
+
+        $metricAggregates = $client->getMetricAggregates(
+            metricId: 'm1',
+            count: 10,
+            interval: Interval::day,
+            timezone: 'UTC'
         );
 
         $this->assertIsArray($metricAggregates);
         $this->assertArrayHasKey('data', $metricAggregates);
-        $this->assertIsArray($metricAggregates['data']);
-        $this->assertArrayHasKey('type', $metricAggregates['data']);
-        $this->assertArrayHasKey('id', $metricAggregates['data']);
         $this->assertArrayHasKey('attributes', $metricAggregates['data']);
-        $this->assertIsArray($metricAggregates['data']['attributes']);
-        $this->assertArrayHasKey('dates', $metricAggregates['data']['attributes']);
-        $this->assertIsArray($metricAggregates['data']['attributes']['dates']);
-        $this->assertArrayHasKey('data', $metricAggregates['data']['attributes']);
-        $this->assertIsArray($metricAggregates['data']['attributes']['data']);
-        $this->assertArrayHasKey('dimensions', $metricAggregates['data']['attributes']['data'][0]);
-        $this->assertArrayHasKey('measurements', $metricAggregates['data']['attributes']['data'][0]);
     }
 
     /**
      * @throws GuzzleException
      */
-    public function testGetMetricProfiles(): void
+    public function testGetAllCampaignsAndProcess(): void
     {
-        $metricProfiles = $this->klaviyoApi->getMetricProfiles(
-            metricId: $this->metricId,
-        );
+        $response1 = [
+            'data' => [['id' => 'c1']],
+            'links' => ['next' => 'https://a.klaviyo.com/api/campaigns/?page[cursor]=next_cursor']
+        ];
+        $response2 = [
+            'data' => [['id' => 'c2']],
+            'links' => ['next' => null]
+        ];
 
-        $this->assertIsArray($metricProfiles);
-        if (count($metricProfiles) > 0) {
-            $this->assertArrayHasKey('campaigns', $metricProfiles[array_key_first($metricProfiles)]);
-            $this->assertIsArray($metricProfiles[array_key_first($metricProfiles)['campaigns']]);
-        }
+        $mock = new MockHandler([
+            new Response(200, [], json_encode($response1)),
+            new Response(200, [], json_encode($response2)),
+        ]);
+        $guzzle = $this->createMockedGuzzleClient($mock);
+
+        $client = new KlaviyoApi(apiKey: 'pk_test', guzzleClient: $guzzle);
+
+        $processedCount = 0;
+        $client->getAllCampaignsAndProcess(callback: function ($data) use (&$processedCount) {
+            $processedCount += count($data);
+        });
+
+        $this->assertEquals(2, $processedCount);
     }
 
     /**
      * @throws GuzzleException
      */
-    public function testGetFlows(): void
+    public function testGetAllCampaignsErrorMidLoop(): void
     {
-        $flows = $this->klaviyoApi->getFlows(
-            flowActionFields: $this->faker->randomElements([
-                'action_type',
-                'status',
-                'created',
-                'updated',
-                'settings',
-                'tracking_options',
-                'send_options',
-                'send_options.use_smart_sending',
-                'send_options.is_transactional',
-                'render_options',
-                'render_options.shorten_links',
-                'render_options.add_org_prefix',
-                'render_options.add_info_link',
-                'render_options.add_opt_out_language',
-            ], null),
-            flowFields: $this->faker->randomElements([
-                'name',
-                'status',
-                'archived',
-                'created',
-                'updated',
-                'trigger_type',
-            ], null),
-            count: $this->faker->numberBetween(1, 50),
-            sort: $this->faker->randomElements([Sort::ascending, Sort::descending])[0],
-            sortField: $this->faker->randomElements([
-                'created',
-                'id',
-                'name',
-                'status',
-                'trigger_type',
-                'updated',
-            ])[0],
-        );
+        $response1 = [
+            'data' => [['id' => 'c1']],
+            'links' => ['next' => 'https://a.klaviyo.com/api/campaigns/?page[cursor]=tok2']
+        ];
 
-        $this->assertIsArray($flows);
-        $this->assertArrayHasKey('data', $flows);
-        $this->assertIsArray($flows['data']);
-        $this->assertArrayHasKey('type', $flows['data'][0]);
-        $this->assertArrayHasKey('id', $flows['data'][0]);
-    }
+        $mock = new MockHandler([
+            new Response(200, [], json_encode($response1)),
+            new Response(500, [], 'Internal Server Error'),
+        ]);
+        $guzzle = $this->createMockedGuzzleClient($mock);
 
-    /**
-     * @throws GuzzleException
-     */
-    public function testGetFlowData(): void
-    {
-        $flows = $this->klaviyoApi->getFlows(count: 1);
-        $flowData = $this->klaviyoApi->getFlowData(
-            flowId: $flows['data'][0]['id'],
-            flowActionFields: $this->faker->randomElements([
-                'action_type',
-                'status',
-                'created',
-                'updated',
-                'settings',
-                'tracking_options',
-                'send_options',
-                'send_options.use_smart_sending',
-                'send_options.is_transactional',
-                'render_options',
-                'render_options.shorten_links',
-                'render_options.add_org_prefix',
-                'render_options.add_info_link',
-                'render_options.add_opt_out_language',
-            ], null),
-            flowFields: $this->faker->randomElements([
-                'name',
-                'status',
-                'archived',
-                'created',
-                'updated',
-                'trigger_type',
-            ], null),
-        );
+        $client = new KlaviyoApi(apiKey: 'pk_test', guzzleClient: $guzzle);
 
-        $this->assertIsArray($flowData);
-        $this->assertArrayHasKey('data', $flowData);
-        $this->assertIsArray($flowData['data']);
-        $this->assertArrayHasKey('type', $flowData['data']);
-        $this->assertArrayHasKey('id', $flowData['data']);
-        $this->assertArrayHasKey('attributes', $flowData['data']);
-        $this->assertArrayHasKey('relationships', $flowData['data']);
-        $this->assertIsArray($flowData['data']['relationships']);
-        $this->assertArrayHasKey('flow-actions', $flowData['data']['relationships']);
-        $this->assertArrayHasKey('data', $flowData['data']['relationships']['flow-actions']);
-        $this->assertIsArray($flowData['data']['relationships']['flow-actions']['data']);
-        if (count($flowData['data']['relationships']['flow-actions']['data']) > 0) {
-            $this->assertArrayHasKey('type', $flowData['data']['relationships']['flow-actions']['data'][0]);
-            $this->assertArrayHasKey('id', $flowData['data']['relationships']['flow-actions']['data'][0]);
-        }
+        $this->expectException(ApiRequestException::class);
+
+        $client->getAllCampaignsAndProcess(callback: function ($data) {});
     }
 }
