@@ -1441,7 +1441,7 @@ class KlaviyoApi extends ApiKeyClient
     }
 
     /**
-     * @param array|null $catalogItemFields
+     * @param array|null $catalogItemsFields
      * @param array|null $filter
      * @param Sort|null $sort
      * @param string|null $sortField
@@ -1460,6 +1460,68 @@ class KlaviyoApi extends ApiKeyClient
         do {
             $response = $this->getCatalogItems(
                 catalogItemsFields: $catalogItemsFields,
+                filter: $filter,
+                sort: $sort,
+                sortField: $sortField,
+                cursor: $cursor
+            );
+            if (!empty($response['data']) && $callback) {
+                $callback($response['data']);
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+    }
+
+    /**
+     * @param array|null $catalogCategoriesFields
+     * @param array|null $filter
+     * @param Sort|null $sort
+     * @param string|null $sortField
+     * @param callable|null $callback
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllCatalogCategoriesAndProcess(
+        ?array $catalogCategoriesFields = null,
+        ?array $filter = null,
+        ?Sort $sort = Sort::ascending,
+        ?string $sortField = null,
+        ?callable $callback = null
+    ): void {
+        $cursor = null;
+        do {
+            $response = $this->getCatalogCategories(
+                catalogCategoriesFields: $catalogCategoriesFields,
+                filter: $filter,
+                sort: $sort,
+                sortField: $sortField,
+                cursor: $cursor
+            );
+            if (!empty($response['data']) && $callback) {
+                $callback($response['data']);
+            }
+        } while (isset($response['links']['next']) && $response['links']['next'] && ($cursor = self::getCursorFromUrl($response['links']['next'])));
+    }
+
+    /**
+     * @param array|null $catalogVariantsFields
+     * @param array|null $filter
+     * @param Sort|null $sort
+     * @param string|null $sortField
+     * @param callable|null $callback
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getAllCatalogVariantsAndProcess(
+        ?array $catalogVariantsFields = null,
+        ?array $filter = null,
+        ?Sort $sort = Sort::ascending,
+        ?string $sortField = null,
+        ?callable $callback = null
+    ): void {
+        $cursor = null;
+        do {
+            $response = $this->getCatalogVariants(
+                catalogVariantsFields: $catalogVariantsFields,
                 filter: $filter,
                 sort: $sort,
                 sortField: $sortField,
