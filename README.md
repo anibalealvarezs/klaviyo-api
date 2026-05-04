@@ -20,6 +20,18 @@ Require the package in the `composer.json` file of your project, and map the pac
 
 ## Methods
 
+## Error Handling
+
+- The SDK now uses a semantic classifier at `src/Support/KlaviyoErrorClassifier.php`.
+- `KlaviyoApi` configures a callable detector with:
+
+```php
+$this->setRateLimitDetector([KlaviyoErrorClassifier::class, 'isRetryable']);
+```
+
+- Retry logic is intentionally conservative and focuses on throttling/rate-limit signals (`429`, `rate_limit`, `throttled`, `too many requests`).
+- Non-throttling API errors continue to surface through normal exceptions (`ApiRequestException`, auth exceptions, etc.).
+
 - ### getMetrics: *Array*
 
   `Gets the file data.`
