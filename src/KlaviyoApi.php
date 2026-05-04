@@ -7,6 +7,7 @@ use Anibalealvarezs\ApiSkeleton\Clients\ApiKeyClient;
 use Anibalealvarezs\KlaviyoApi\Enums\Interval;
 use Anibalealvarezs\KlaviyoApi\Enums\Relationships;
 use Anibalealvarezs\KlaviyoApi\Enums\Sort;
+use Anibalealvarezs\KlaviyoApi\Support\KlaviyoErrorClassifier;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
@@ -36,6 +37,7 @@ class KlaviyoApi extends ApiKeyClient
 
         $this->setResponseErrorDetector('errors');
         $this->setErrorMessageParser(fn ($data) => $data['errors'][0]['detail'] ?? json_encode($data));
+        $this->setRateLimitDetector([KlaviyoErrorClassifier::class, 'isRetryable']);
     }
 
     /**
